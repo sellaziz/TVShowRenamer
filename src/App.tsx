@@ -1,51 +1,83 @@
-import { useState } from "react";
-import reactLogo from "./assets/react.svg";
-import { invoke } from "@tauri-apps/api/tauri";
-import "./App.css";
+import { Key, useState } from "react";
+// import reactLogo from "./assets/react.svg";
+// import { invoke } from "@tauri-apps/api/tauri";
+import "./styles.css";
+
+function List({ id, items }) {
+  const filteredItems = items.filter(item => item !== null);
+
+  // Check if the items array is not empty
+  if (filteredItems.length === 0) {
+    return null; // If empty, don't render anything
+  }
+
+  // If not empty, render the list
+  return (
+    <ul id={id}>
+      {filteredItems.map((item: string, index: Key | null) => (
+        <li key={index}>{item}</li>
+      ))}
+    </ul>
+  );
+}
+// function List(id: any, list: any[]) {
+//   if(list.)
+//   const listItems = list.map(el => <li>{el}</li>);
+//   return <ul id={id}>{listItems}</ul>;
+// }
 
 function App() {
-  const [greetMsg, setGreetMsg] = useState("");
-  const [name, setName] = useState("");
-
-  async function greet() {
-    // Learn more about Tauri commands at https://tauri.app/v1/guides/features/command
-    setGreetMsg(await invoke("greet", { name }));
-  }
+  const [InputList, SetInputList] = useState([""]);
+  const [OutputList, SetOutputList] = useState([""]);
+  const [Input, SetInput] = useState("");
 
   return (
     <div className="container">
-      <h1>Welcome to Tauri!</h1>
-
-      <div className="row">
-        <a href="https://vitejs.dev" target="_blank">
-          <img src="/vite.svg" className="logo vite" alt="Vite logo" />
-        </a>
-        <a href="https://tauri.app" target="_blank">
-          <img src="/tauri.svg" className="logo tauri" alt="Tauri logo" />
-        </a>
-        <a href="https://reactjs.org" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-
-      <p>Click on the Tauri, Vite, and React logos to learn more.</p>
-
+      <h1>Welcome to RustyShow!</h1>
       <form
         className="row"
+        id="InputForm"
         onSubmit={(e) => {
           e.preventDefault();
-          greet();
+          console.log('submit !');
+          if (Input == "") {
+            return;
+          }
+          var nextInputList = [...InputList, Input];
+          // nextInputList = [...nextInputList, Input];
+          SetInputList(nextInputList);
+          SetInput("");
         }}
       >
         <input
-          id="greet-input"
-          onChange={(e) => setName(e.currentTarget.value)}
-          placeholder="Enter a name..."
+          id="input-input"
+          onChange={(e) => SetInput(e.currentTarget.value)}
+          value={Input}
+          placeholder="Enter an Input..."
         />
-        <button type="submit">Greet</button>
+        <button type="submit">Add</button>
       </form>
 
-      <p>{greetMsg}</p>
+      <div id="content" className="main-pane">
+        <div id="input-column" className="content-pane">
+          <List id={"input-list"} items={InputList} />
+        </div>
+        <button id="process-btn" className="process-button" type="button"
+          onClick={(e) => {
+            e.preventDefault();
+            console.log('submit !');
+            if (InputList.length == 0) {
+              return;
+            }
+            var nextOutputList = [...InputList];
+            SetOutputList(nextOutputList);
+          }}
+        >➡️</button>
+        <div id="output-column" className="content-pane">
+          <List id={"output-list"} items={OutputList} />
+        </div>
+      </div>
+
     </div>
   );
 }

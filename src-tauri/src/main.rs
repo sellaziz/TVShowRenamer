@@ -6,15 +6,53 @@ use std::path::PathBuf;
 use tauri::api::dialog::FileDialogBuilder;
 use tauri::{CustomMenuItem, Manager, Menu, MenuItem, Submenu};
 
+extern crate tmdb;
+use tmdb::themoviedb::TMDb;
+mod parser;
+// use parser;
+
 #[derive(Clone, serde::Serialize)]
 struct Payload {
     message: String,
+}
+
+#[derive(Clone, serde::Serialize)]
+struct ListPayload {
+    message: Vec<String>,
 }
 
 // Learn more about Tauri commands at https://tauri.app/v1/guides/features/command
 #[tauri::command]
 fn add_input(name: &str) -> String {
     format!("Hello, {}! You've been greeted from Rust!", name)
+}
+
+#[tauri::command]
+fn clean_names(payload: Vec<String>) -> Vec<String> {
+    let path_vec: Vec<PathBuf> = payload
+        .iter()
+        .filter_map(|name| {
+            // Process each name (e.g., clean, format, etc.)
+            if name.is_empty() {
+                return None;
+            };
+            Some(PathBuf::from(name))
+            // format!("Hello, {}! You've been greeted from Rust!", name)
+        })
+        .collect();
+
+    let cleaned_names: Vec<String> = path_vec
+        .iter()
+        .map(move |name| {
+            // Process each name (e.g., clean, format, etc.)
+            println!("Hello, {:?}! You've been greeted from Rust!", name);
+            let name_in = name.to_owned();
+            parser::extract_showname(name_in)
+            // format!("Hello, {}! You've been greeted from Rust!", name)
+        })
+        .collect();
+    // Return the processed names
+    cleaned_names
 }
 
 #[tauri::command]
@@ -28,6 +66,11 @@ async fn emit_event(app: tauri::AppHandle) {
 }
 
 fn main() {
+    let tmdb = TMDb {
+        api_key: env!("TMDB_API_KEY"),
+        language: "fr",
+    };
+
     let quit = CustomMenuItem::new("quit".to_string(), "Quit");
     let open_dir = CustomMenuItem::new("open_dir".to_string(), "Open Directory...");
     let open_files = CustomMenuItem::new("open_files".to_string(), "Open Files...");
@@ -74,19 +117,24 @@ fn main() {
                     if files_path.is_none() {
                         return;
                     }
-                    let concatenated_paths = files_path.unwrap()
+                    let string_list = files_path
+                        .unwrap()
                         .iter()
-                        .map(|path| <PathBuf as Clone>::clone(&path).into_os_string().into_string().unwrap())
-                        .collect::<Vec<String>>()
-                        .join("; "); // Use whatever separator you prefer
+                        .map(|path| {
+                            <PathBuf as Clone>::clone(&path)
+                                .into_os_string()
+                                .into_string()
+                                .unwrap()
+                        })
+                        .collect::<Vec<String>>();
 
                     event
                         .window()
                         .app_handle()
                         .emit_all(
                             "open_files",
-                            Payload {
-                                message: concatenated_paths,
+                            ListPayload {
+                                message: string_list,
                             },
                         )
                         .unwrap();
@@ -94,7 +142,7 @@ fn main() {
             }
             _ => {}
         })
-        .invoke_handler(tauri::generate_handler![add_input, emit_event])
+        .invoke_handler(tauri::generate_handler![add_input, emit_event, clean_names])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

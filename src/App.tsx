@@ -36,9 +36,19 @@ function App() {
   type Payload = {
     message: string;
   };
+  type ListPayload = {
+    message: string[];
+  };
   async function emitEvent() {
     await invoke('emit_event');
   }
+  async function clean_names(list: string[]) {
+    const filteredItems = list.filter(item => item !== null);
+    const response = await invoke<ListPayload>('clean_names', { payload: filteredItems });
+    console.log('Response: ', response);
+    return response;
+  }
+
 
   const TestBackend = () => {
     useEffect(() => {
@@ -55,9 +65,9 @@ function App() {
           const nextInputList = [...InputList, event.payload.message];
           SetInputList(nextInputList);
         });
-        await listen<Payload>('open_files', (event) => {
+        await listen<ListPayload>('open_files', (event) => {
           console.log("Event triggered from rust!\nPayload: " + event.payload.message);
-          const nextInputList = [...InputList, ...event.payload.message.split(';')];
+          const nextInputList = [...InputList, ...event.payload.message];
           SetInputList(nextInputList);
         });
       }
@@ -111,14 +121,21 @@ function App() {
           <List id={"input-list"} items={InputList} />
         </div>
         <button id="process-btn" className="process-button" type="button"
-          onClick={(e) => {
+          onClick={async (e) => {
             e.preventDefault();
             console.log('submit !');
             if (InputList.length == 0) {
               return;
             }
-            var nextOutputList = [...InputList];
-            SetOutputList(nextOutputList);
+            // var nextOutputList = [...InputList];
+            // SetOutputList(nextOutputList);
+            try {
+              var nextOutputList = await clean_names(InputList);
+              console.log(nextOutputList)
+              SetOutputList(nextOutputList);
+            } catch (e) {
+              return;
+            }
           }}
         >➡️</button>
         <div id="output-column" className="content-pane">

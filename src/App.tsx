@@ -1,6 +1,7 @@
-import { Key, useState } from "react";
+import { Key, useState, useEffect } from "react";
 // import reactLogo from "./assets/react.svg";
-// import { invoke } from "@tauri-apps/api/tauri";
+import { invoke } from "@tauri-apps/api/tauri";
+import { emit, listen } from '@tauri-apps/api/event'
 import "./styles.css";
 
 function List({ id, items }) {
@@ -26,11 +27,58 @@ function List({ id, items }) {
 //   return <ul id={id}>{listItems}</ul>;
 // }
 
+
 function App() {
   const [InputList, SetInputList] = useState([""]);
   const [OutputList, SetOutputList] = useState([""]);
   const [Input, SetInput] = useState("");
 
+  type Payload = {
+    message: string;
+  };
+  async function emitEvent() {
+    await invoke('emit_event');
+  }
+
+  const TestBackend = () => {
+    useEffect(() => {
+      async function startSerialEventListener() {
+        await listen<Payload>('event-name', (event) => {
+          console.log("Event triggered from rust!\nPayload: " + event.payload.message);
+          if (event.event == 'open_dir') {
+            const nextInputList = [...InputList, event.payload.message];
+            SetInputList(nextInputList);
+          }
+        });
+        await listen<Payload>('open_dir', (event) => {
+          console.log("Event triggered from rust!\nPayload: " + event.payload.message);
+          const nextInputList = [...InputList, event.payload.message];
+          SetInputList(nextInputList);
+        });
+        await listen<Payload>('open_files', (event) => {
+          console.log("Event triggered from rust!\nPayload: " + event.payload.message);
+          const nextInputList = [...InputList, ...event.payload.message.split(';')];
+          SetInputList(nextInputList);
+        });
+      }
+      return () => {
+        startSerialEventListener();
+      };
+    }, []);
+
+    return (
+      <button title="Trigger Event" onClick={emitEvent} />
+    );
+  };
+
+  // const unlisten = await listen('click', (event) => {
+  // // event.event is the event name (useful if you want to use a single callback fn for multiple event types)
+  // // event.payload is the payload object
+  //   if (event.event == 'open_dir') {
+  //     const nextInputList = event.payload;
+  //     SetInputList(nextInputList);
+  //   }
+  // })
   return (
     <div className="container">
       <h1>Welcome to RustyShow!</h1>
@@ -77,6 +125,7 @@ function App() {
           <List id={"output-list"} items={OutputList} />
         </div>
       </div>
+      <TestBackend />
 
     </div>
   );

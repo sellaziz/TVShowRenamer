@@ -48,6 +48,12 @@
   justify-content: center;
 }
 
+.button-pane {
+  display: flex;
+  flex-direction: column;
+  flex-wrap: wrap;
+}
+
 .main-pane {
   padding: 1em;
   display: flex;

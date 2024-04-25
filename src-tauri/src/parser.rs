@@ -17,7 +17,7 @@ fn get_filename(input: PathBuf) -> String {
         .to_lowercase()
 }
 
-fn get_extension(input: PathBuf) -> String {
+pub fn get_extension(input: PathBuf) -> String {
     input
         .extension()
         .unwrap()
@@ -27,7 +27,7 @@ fn get_extension(input: PathBuf) -> String {
         .to_lowercase()
 }
 
-fn extract_info(input: PathBuf) -> Option<[u32; 2]> {
+pub fn extract_info(input: PathBuf) -> Option<[u32; 2]> {
     let info_set = vec![
         r"[Ss]([0-9]+)[ ._-]*[Ee]([0-9]+)",    // S03E04
         r"s([eai]+son\W?)?(\d{1,2})",          // Season 1

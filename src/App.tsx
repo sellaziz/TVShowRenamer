@@ -48,6 +48,12 @@ function App() {
     console.log('Response: ', response);
     return response;
   }
+  async function process(list: string[]) {
+    const filteredItems = list.filter(item => item !== null);
+    const response = await invoke<ListPayload>('process', { payload: filteredItems });
+    console.log('Response: ', response);
+    return response;
+  }
 
 
   const TestBackend = () => {
@@ -120,24 +126,44 @@ function App() {
         <div id="input-column" className="content-pane">
           <List id={"input-list"} items={InputList} />
         </div>
-        <button id="process-btn" className="process-button" type="button"
-          onClick={async (e) => {
-            e.preventDefault();
-            console.log('submit !');
-            if (InputList.length == 0) {
-              return;
-            }
-            // var nextOutputList = [...InputList];
-            // SetOutputList(nextOutputList);
-            try {
-              var nextOutputList = await clean_names(InputList);
-              console.log(nextOutputList)
-              SetOutputList(nextOutputList);
-            } catch (e) {
-              return;
-            }
-          }}
-        >➡️</button>
+        <div id="button-pane">
+          <button id="process-btn" className="process-button" type="button"
+            onClick={async (e) => {
+              e.preventDefault();
+              console.log('submit !');
+              if (InputList.length == 0) {
+                return;
+              }
+              // var nextOutputList = [...InputList];
+              // SetOutputList(nextOutputList);
+              try {
+                var nextOutputList = await clean_names(InputList);
+                console.log(nextOutputList)
+                SetOutputList(nextOutputList);
+              } catch (e) {
+                return;
+              }
+            }}
+          >➡️</button>
+          <button id="process-btn" className="process-button" type="button"
+            onClick={async (e) => {
+              e.preventDefault();
+              console.log('submit !');
+              if (InputList.length == 0) {
+                return;
+              }
+              // var nextOutputList = [...InputList];
+              // SetOutputList(nextOutputList);
+              try {
+                var nextOutputList = await process(InputList);
+                console.log(nextOutputList)
+                SetOutputList(nextOutputList);
+              } catch (e) {
+                return;
+              }
+            }}
+          >↓</button>
+        </div>
         <div id="output-column" className="content-pane">
           <List id={"output-list"} items={OutputList} />
         </div>

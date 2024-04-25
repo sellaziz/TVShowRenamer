@@ -7,6 +7,8 @@ use tauri::api::dialog::FileDialogBuilder;
 use tauri::{CustomMenuItem, Manager, Menu, MenuItem, Submenu};
 
 extern crate tmdb;
+use crate::tmdb::themoviedb::*;
+use tmdb::model::SeasonTV;
 use tmdb::themoviedb::TMDb;
 mod parser;
 // use parser;
@@ -55,6 +57,85 @@ fn clean_names(payload: Vec<String>) -> Vec<String> {
     cleaned_names
 }
 
+struct SQuery {
+    path: PathBuf,
+    show: String,
+    season: u32,
+    episode: u32,
+    year: Option<u32>,
+}
+
+struct ShowRef {
+    path: PathBuf,
+    show: String,
+    season: u32,
+    episode: u32,
+    year: Option<u32>,
+    formatted_name: String,
+}
+
+#[tauri::command]
+fn process(payload: Vec<String>) -> Vec<String> {
+    let tmdb: TMDb = TMDb {
+        api_key: env!("TMDB_API_KEY"),
+        language: "fr",
+    };
+    let path_vec = payload
+        .iter()
+        .filter_map(move |name| {
+            if name.is_empty() {
+                return None;
+            };
+            let path = PathBuf::from(name);
+            let showname = parser::extract_showname(path.clone());
+            let infos = parser::extract_info(path.clone()).unwrap();
+            let query = SQuery {
+                path: path.clone(),
+                show: showname.clone(),
+                season: infos[0],
+                episode: infos[1],
+                year: None,
+            };
+            println!("Hello, {:?}!", &query.show);
+            let result = tmdb
+                .search()
+                .title(&query.show)
+                .execute_tv()
+                .unwrap()
+                .results[0]
+                .fetch(&tmdb)
+                .unwrap();
+            let mut season = result.fetch_season(&tmdb, query.season as u16).unwrap();
+            let showref = Some(ShowRef {
+                path: path.clone(),
+                show: showname.clone(),
+                season: infos[0],
+                episode: infos[1],
+                year: None,
+                formatted_name: format!(
+                    "{show} - S{season:0>2}E{episode:0>2} - {description}.{extension}",
+                    show = result.name,
+                    season = infos[0],
+                    episode = infos[1],
+                    description = season.episodes.remove(infos[1] as usize).name,
+                    extension = parser::get_extension(path.clone())
+                ),
+            });
+            let out = format!(
+                "{out_dir}/{show} - S{season:0>2}E{episode:0>2} - {description}.{extension}",
+                out_dir = path.clone().parent().unwrap().as_os_str().to_os_string().into_string().unwrap(),
+                show = result.name,
+                season = infos[0],
+                episode = infos[1],
+                description = season.episodes.remove(infos[1] as usize).name,
+                extension = parser::get_extension(path.clone())
+            );
+            Some(out)
+        })
+        .collect();
+    path_vec
+}
+
 #[tauri::command]
 async fn emit_event(app: tauri::AppHandle) {
     let payload = Payload {
@@ -66,11 +147,6 @@ async fn emit_event(app: tauri::AppHandle) {
 }
 
 fn main() {
-    let tmdb = TMDb {
-        api_key: env!("TMDB_API_KEY"),
-        language: "fr",
-    };
-
     let quit = CustomMenuItem::new("quit".to_string(), "Quit");
     let open_dir = CustomMenuItem::new("open_dir".to_string(), "Open Directory...");
     let open_files = CustomMenuItem::new("open_files".to_string(), "Open Files...");
@@ -142,7 +218,12 @@ fn main() {
             }
             _ => {}
         })
-        .invoke_handler(tauri::generate_handler![add_input, emit_event, clean_names])
+        .invoke_handler(tauri::generate_handler![
+            add_input,
+            emit_event,
+            clean_names,
+            process
+        ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

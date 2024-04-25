@@ -10,6 +10,7 @@ extern crate tmdb;
 use crate::tmdb::themoviedb::*;
 use tmdb::model::SeasonTV;
 use tmdb::themoviedb::TMDb;
+use std::{fs, vec};
 mod parser;
 // use parser;
 
@@ -30,31 +31,15 @@ fn add_input(name: &str) -> String {
 }
 
 #[tauri::command]
-fn clean_names(payload: Vec<String>) -> Vec<String> {
-    let path_vec: Vec<PathBuf> = payload
-        .iter()
-        .filter_map(|name| {
-            // Process each name (e.g., clean, format, etc.)
-            if name.is_empty() {
-                return None;
-            };
-            Some(PathBuf::from(name))
-            // format!("Hello, {}! You've been greeted from Rust!", name)
-        })
-        .collect();
-
-    let cleaned_names: Vec<String> = path_vec
-        .iter()
-        .map(move |name| {
-            // Process each name (e.g., clean, format, etc.)
-            println!("Hello, {:?}! You've been greeted from Rust!", name);
-            let name_in = name.to_owned();
-            parser::extract_showname(name_in)
-            // format!("Hello, {}! You've been greeted from Rust!", name)
-        })
-        .collect();
-    // Return the processed names
-    cleaned_names
+fn rename_all(payload: Vec<String>, out: Vec<String>) {
+    if payload.len() != out.len() {
+        println!("fail");
+        return;
+    }
+    for i in 0..payload.len() {
+        println!("rename {} to {}", &payload[i], &out[i]);
+        fs::rename(&payload[i], &out[i]).unwrap();
+    }
 }
 
 struct SQuery {
@@ -221,7 +206,7 @@ fn main() {
         .invoke_handler(tauri::generate_handler![
             add_input,
             emit_event,
-            clean_names,
+            rename_all,
             process
         ])
         .run(tauri::generate_context!())

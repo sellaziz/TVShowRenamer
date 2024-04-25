@@ -29,9 +29,9 @@ function List({ id, items }) {
 
 
 function App() {
-  const [InputList, SetInputList] = useState([""]);
-  const [OutputList, SetOutputList] = useState([""]);
-  const [Input, SetInput] = useState("");
+  const [InputList, SetInputList] = useState([]);
+  const [OutputList, SetOutputList] = useState([]);
+  const [Input, SetInput] = useState();
 
   type Payload = {
     message: string;
@@ -42,9 +42,11 @@ function App() {
   async function emitEvent() {
     await invoke('emit_event');
   }
-  async function clean_names(list: string[]) {
+  async function rename_all(list: string[], out: string[]) {
     const filteredItems = list.filter(item => item !== null);
-    const response = await invoke<ListPayload>('clean_names', { payload: filteredItems });
+    const outItems = out.filter(item => item !== null);
+    console.log('send: ', filteredItems, outItems);
+    const response = await invoke('rename_all', { payload: filteredItems, out: outItems });
     console.log('Response: ', response);
     return response;
   }
@@ -68,12 +70,26 @@ function App() {
         });
         await listen<Payload>('open_dir', (event) => {
           console.log("Event triggered from rust!\nPayload: " + event.payload.message);
-          const nextInputList = [...InputList, event.payload.message];
+          const filteredItems = event.payload.message.filter(item => {
+            const cond1 = item !== null;
+            const cond2 = item !== "";
+            return cond1 && cond2;
+          }
+          );
+          var nextInputList = [...InputList, ...filteredItems];
+          // nextInputList = nextInputList.filter(item => item !== "");
           SetInputList(nextInputList);
         });
         await listen<ListPayload>('open_files', (event) => {
           console.log("Event triggered from rust!\nPayload: " + event.payload.message);
-          const nextInputList = [...InputList, ...event.payload.message];
+          const filteredItems = event.payload.message.filter(item => {
+            const cond1 = item !== null;
+            const cond2 = item !== "";
+            return cond1 && cond2;
+          }
+          );
+          var nextInputList = [...InputList, ...filteredItems];
+          // nextInputList = nextInputList.filter(item => item !== "");
           SetInputList(nextInputList);
         });
       }
@@ -134,12 +150,15 @@ function App() {
               if (InputList.length == 0) {
                 return;
               }
+              if (OutputList.length == 0) {
+                return;
+              }
               // var nextOutputList = [...InputList];
               // SetOutputList(nextOutputList);
               try {
-                var nextOutputList = await clean_names(InputList);
-                console.log(nextOutputList)
-                SetOutputList(nextOutputList);
+                await rename_all(InputList, OutputList);
+                // console.log(nextOutputList)
+                // SetOutputList(nextOutputList);
               } catch (e) {
                 return;
               }

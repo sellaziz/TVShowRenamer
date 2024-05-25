@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import styled from 'styled-components';
+import { v4 as uuidv4 } from 'uuid';
 import Sidebar from './components/Sidebar.tsx';
 import FileList from './components/FileList.tsx';
 import CenterContainer from './components/CenterContainer.tsx';
@@ -16,6 +17,7 @@ const Container = styled.div`
 `;
 
 interface File {
+  id: string;
   name: string;
   extension: string;
   path?: string;
@@ -49,7 +51,7 @@ const App: React.FC = () => {
           const fileName = filePath.split('/').pop() || '';
           const name = fileName.replace(/\.[^/.]+$/, "");
           const extension = fileName.split('.').pop() || '';
-          return { name, extension, path: filePath };
+          return { id: uuidv4(), name, extension, path: filePath };
         });
         setOriginalFiles(files);
       }
@@ -61,7 +63,7 @@ const App: React.FC = () => {
   const handleAcceptNames = async () => {
     try {
       for (const file of newNames) {
-        const originalFile = originalFiles.find(f => f.path === file.path);
+        const originalFile = originalFiles.find(f => f.id === file.id);
         if (originalFile && originalFile.path) {
           await invoke('rename_file', { originalPath: originalFile.path, newName: `${file.name}.${file.extension}` });
         }

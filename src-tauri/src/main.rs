@@ -5,7 +5,7 @@ use std::fs;
 use std::path::PathBuf;
 
 #[tauri::command]
-fn rename_file(original_path: String, new_name: String) -> Result<(), String> {
+fn rename_file(original_path: String, new_name: String, output_directory: String) -> Result<(), String> {
     let original_path = PathBuf::from(original_path);
     let parent = original_path.parent().ok_or("Failed to get parent directory")?;
     let new_path = parent.join(new_name);

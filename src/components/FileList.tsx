@@ -3,7 +3,7 @@ import styled from 'styled-components';
 
 const List = styled.div`
   width: 45%;
-  height: 90vh;
+  height: 80vh;
   border: 1px solid #ccc;
   padding: 10px;
   overflow-y: auto;

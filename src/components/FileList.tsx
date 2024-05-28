@@ -1,5 +1,6 @@
 import React from 'react';
 import styled from 'styled-components';
+import { File } from '../utils/common.ts';
 
 const List = styled.div`
   width: 45%;
@@ -16,27 +17,35 @@ const ListItem = styled.div`
   }
 `;
 
-interface File {
-  name: string;
-  extension: string;
-}
-
 interface FileListProps {
   title: string;
   files: File[];
 }
 
-const FileList: React.FC<FileListProps> = ({ title, files }) => {
+const InputFileList: React.FC<FileListProps> = ({ title, files }) => {
   return (
     <List>
       <h3>{title}</h3>
       {files.map((file, index) => (
         <ListItem key={index}>
-          {file.name}.{file.extension}
+          {file.original_name}.{file.extension}
         </ListItem>
       ))}
     </List>
   );
 };
 
-export default FileList;
+const OutputFileList: React.FC<FileListProps> = ({ title, files }) => {
+  return (
+    <List>
+      <h3>{title}</h3>
+      {files.map((file, index) => (
+        <ListItem key={index}>
+          {file.new_name !== file.original_name ? `${file.new_name}.${file.extension}` : 'Won\'t rename'}
+        </ListItem>
+      ))}
+    </List>
+  );
+};
+
+export { InputFileList, OutputFileList };

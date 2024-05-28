@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import styled from 'styled-components';
-import { File } from '../interfaces/common.tsx';
+import { File } from '../utils/common.ts';
 
 interface EpisodeProps {
-  originalFiles: File[];
+  inputFiles: File[];
 }
 
 const Container = styled.div`
@@ -44,25 +44,25 @@ const Table = styled.table`
   }
 `;
 
-const Episode: React.FC<EpisodeProps> = ({ originalFiles }) => {
+const Episode: React.FC<EpisodeProps> = ({ inputFiles }) => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
   useEffect(() => {
-    if (originalFiles.length > 0) {
-      setSelectedFile(originalFiles[0]);
+    if (inputFiles.length > 0) {
+      setSelectedFile(inputFiles[0]);
     }
-  }, [originalFiles]);
+  }, [inputFiles]);
 
   return (
     <Container>
       <FileListContainer>
-        {originalFiles.map((file) => (
+        {inputFiles.map((file) => (
           <FileItem
             key={file.id}
             isSelected={selectedFile?.id === file.id}
-            onClick={() => setSelectedFile(file)}
+            onClick={() => { setSelectedFile(file); }}
           >
-            {file.name}
+            {file.original_name}
           </FileItem>
         ))}
       </FileListContainer>
@@ -82,7 +82,7 @@ const Episode: React.FC<EpisodeProps> = ({ originalFiles }) => {
               </tr>
               <tr>
                 <td>Name</td>
-                <td>{selectedFile.name}</td>
+                <td>{selectedFile.original_name}</td>
               </tr>
               <tr>
                 <td>Extension</td>

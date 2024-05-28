@@ -1,7 +1,7 @@
 import React from 'react';
 import styled from 'styled-components';
 import { v4 as uuidv4 } from 'uuid';
-import FileList from '../components/FileList.tsx';
+import { InputFileList, OutputFileList } from '../components/FileList.tsx';
 import CenterContainer from '../components/CenterContainer.tsx';
 import Button from '../components/Button.tsx';
 import OutputDirectorySelector from '../components/OutputDirectorySelector.tsx';
@@ -9,7 +9,7 @@ import { faSyncAlt, faFileUpload, faCheck } from '@fortawesome/free-solid-svg-ic
 import extractDetails from '../utils/extractDetails.ts';
 import { invoke } from '@tauri-apps/api/tauri';
 import { open } from '@tauri-apps/api/dialog';
-import { File } from '../interfaces/common.tsx';
+import { File } from '../utils/common.ts';
 
 const Container = styled.div`
   display: flex;
@@ -24,30 +24,26 @@ const Content = styled.div`
 `;
 
 interface RenameProps {
-    originalFiles: File[];
-    setOriginalFiles: React.Dispatch<React.SetStateAction<File[]>>;
-    newNames: File[];
-    setNewNames: React.Dispatch<React.SetStateAction<File[]>>;
+    inputFiles: File[];
+    setInputFiles: React.Dispatch<React.SetStateAction<File[]>>;
     outputDirectory: string;
     setOutputDirectory: React.Dispatch<React.SetStateAction<string>>;
 }
 
 const Rename: React.FC<RenameProps> = ({
-    originalFiles,
-    setOriginalFiles,
-    newNames,
-    setNewNames,
+    inputFiles,
+    setInputFiles,
     outputDirectory,
     setOutputDirectory
 }) => {
 
     const handleRename = () => {
-        const updatedFiles = originalFiles.map((file) => {
-            const { showName, seasonNumber, episodeNumber } = extractDetails(file.name);
+        const updatedFiles = inputFiles.map((file) => {
+            const { showName, seasonNumber, episodeNumber } = extractDetails(file.original_name);
             const newName = `${showName} - S${seasonNumber}E${episodeNumber}`;
-            return { ...file, name: newName };
+            return { ...file, new_name: newName };
         });
-        setNewNames(updatedFiles);
+        setInputFiles(updatedFiles);
     };
 
     const handleFileInputChange = async () => {
@@ -65,9 +61,10 @@ const Rename: React.FC<RenameProps> = ({
                     const fileName = filePath.split('/').pop() || '';
                     const name = fileName.replace(/\.[^/.]+$/, "");
                     const extension = fileName.split('.').pop() || '';
-                    return { id: uuidv4(), name, extension, path: filePath };
+                    const { showName } = extractDetails(name);
+                    return { id: uuidv4(), original_name: name, new_name: name, show_name: showName, extension: extension, path: filePath };
                 });
-                setOriginalFiles(files);
+                setInputFiles(files);
                 setOutputDirectory(files[files.length - 1].path.split('/').slice(0, -1).join('/'));
             }
         } catch (error) {
@@ -77,14 +74,16 @@ const Rename: React.FC<RenameProps> = ({
 
     const handleAcceptNames = async () => {
         try {
-            for (const file of newNames) {
-                const originalFile = originalFiles.find(f => f.id === file.id);
+            for (const file of inputFiles) {
+                const originalFile = inputFiles.find(f => f.id === file.id);
                 if (originalFile && originalFile.path && outputDirectory) {
-                    await invoke('rename_file', {
-                        originalPath: originalFile.path,
-                        newName: `${file.name}.${file.extension}`,
-                        outputDirectory
-                    });
+                    if (originalFile.new_name !== originalFile.original_name) {
+                        await invoke('rename_file', {
+                            originalPath: originalFile.path,
+                            newName: `${file.new_name}.${file.extension}`,
+                            outputDirectory
+                        });
+                    }
                 }
             }
             alert('Files renamed successfully');
@@ -110,13 +109,13 @@ const Rename: React.FC<RenameProps> = ({
     return (
         <Container>
             <Content>
-                <FileList title="Original Files" files={originalFiles} />
+                <InputFileList title="Original Files" files={inputFiles} />
                 <CenterContainer>
                     <Button icon={faSyncAlt} onClick={handleRename} title="Rename Files" />
                     <Button icon={faFileUpload} onClick={handleFileInputChange} title="Add Files" />
                     <Button icon={faCheck} onClick={handleAcceptNames} title="Accept Names" />
                 </CenterContainer>
-                <FileList title="New Names" files={newNames} />
+                <OutputFileList title="New Names" files={inputFiles} />
             </Content>
             <OutputDirectorySelector directory={outputDirectory} onSelectDirectory={handleSelectOutputDirectory} />
         </Container>

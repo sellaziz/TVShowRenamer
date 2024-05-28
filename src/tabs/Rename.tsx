@@ -7,6 +7,7 @@ import Button from '../components/Button.tsx';
 import OutputDirectorySelector from '../components/OutputDirectorySelector.tsx';
 import { faSyncAlt, faFileUpload, faCheck } from '@fortawesome/free-solid-svg-icons';
 import extractDetails from '../utils/extractDetails.ts';
+import fetchEpisodeDetails from '../utils/fetchEpisodeDetails.ts';
 import { invoke } from '@tauri-apps/api/tauri';
 import { open } from '@tauri-apps/api/dialog';
 import { File } from '../utils/common.ts';
@@ -37,12 +38,21 @@ const Rename: React.FC<RenameProps> = ({
     setOutputDirectory
 }) => {
 
-    const handleRename = () => {
-        const updatedFiles = inputFiles.map((file) => {
+    const handleRename = async () => {
+        const updatedFiles = await Promise.all(inputFiles.map(async (file) => {
             const { showName, seasonNumber, episodeNumber } = extractDetails(file.original_name);
-            const newName = `${showName} - S${seasonNumber}E${episodeNumber}`;
-            return { ...file, new_name: newName };
-        });
+            var episodeDetails = null;
+            var newName;
+            try {
+                const apiKey: string = await invoke('get_api_key');
+                episodeDetails = await fetchEpisodeDetails(file.show_name, parseInt(seasonNumber, 10), parseInt(episodeNumber, 10), apiKey);
+                newName = `${episodeDetails.show_name} - S${seasonNumber}E${episodeNumber} - ${episodeDetails.episode_name}`;
+            } catch (error) {
+                newName = `${showName} - S${seasonNumber}E${episodeNumber}`;
+                console.error('Error fetching episode details:', error);
+            }
+            return { ...file, new_name: newName, episode_details: episodeDetails };
+        }));
         setInputFiles(updatedFiles);
     };
 
@@ -62,7 +72,7 @@ const Rename: React.FC<RenameProps> = ({
                     const name = fileName.replace(/\.[^/.]+$/, "");
                     const extension = fileName.split('.').pop() || '';
                     const { showName } = extractDetails(name);
-                    return { id: uuidv4(), original_name: name, new_name: name, show_name: showName, extension: extension, path: filePath };
+                    return { id: uuidv4(), original_name: name, new_name: name, extension: extension, show_name: showName, path: filePath };
                 });
                 setInputFiles(files);
                 setOutputDirectory(files[files.length - 1].path.split('/').slice(0, -1).join('/'));

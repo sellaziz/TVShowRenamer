@@ -1,7 +1,7 @@
 // Prevents additional console window on Windows in release, DO NOT REMOVE!!
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
-use std::fs;
+use std::{env, fs};
 use std::path::PathBuf;
 
 #[tauri::command]
@@ -13,9 +13,14 @@ fn rename_file(original_path: String, new_name: String, output_directory: String
     Ok(())
 }
 
+#[tauri::command]
+fn get_api_key() -> String {
+  env::var("TMDB_API_KEY").expect("TMDBAPI_KEY must be set")
+}
+
 fn main() {
     tauri::Builder::default()
-        .invoke_handler(tauri::generate_handler![rename_file])
+        .invoke_handler(tauri::generate_handler![rename_file, get_api_key])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

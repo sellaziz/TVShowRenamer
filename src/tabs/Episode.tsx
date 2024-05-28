@@ -4,6 +4,7 @@ import { File } from '../utils/common.ts';
 
 interface EpisodeProps {
   inputFiles: File[];
+  setInputFiles: React.Dispatch<React.SetStateAction<File[]>>;
 }
 
 const Container = styled.div`
@@ -44,14 +45,31 @@ const Table = styled.table`
   }
 `;
 
-const Episode: React.FC<EpisodeProps> = ({ inputFiles }) => {
+const Episode: React.FC<EpisodeProps> = ({ inputFiles, setInputFiles }) => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [newShowName, setNewShowName] = useState('');
 
   useEffect(() => {
     if (inputFiles.length > 0) {
       setSelectedFile(inputFiles[0]);
+      setNewShowName(inputFiles[0].show_name);
     }
   }, [inputFiles]);
+
+  const handleShowNameSubmit = (e) => {
+    const updatedShowName = newShowName.trim();
+    e.preventDefault();
+    if (selectedFile && updatedShowName) {
+      const updatedFiles = inputFiles.map((file) => {
+        if (file.id === selectedFile.id) {
+          return { ...file, show_name: updatedShowName };
+        }
+        return file;
+      });
+      setSelectedFile({ ...selectedFile, show_name: updatedShowName });
+      setInputFiles(updatedFiles);
+    }
+  };
 
   return (
     <Container>
@@ -60,7 +78,7 @@ const Episode: React.FC<EpisodeProps> = ({ inputFiles }) => {
           <FileItem
             key={file.id}
             isSelected={selectedFile?.id === file.id}
-            onClick={() => { setSelectedFile(file); }}
+            onClick={() => { setSelectedFile(file); setNewShowName(file.show_name); }}
           >
             {file.original_name}
           </FileItem>
@@ -89,9 +107,52 @@ const Episode: React.FC<EpisodeProps> = ({ inputFiles }) => {
                 <td>{selectedFile.extension}</td>
               </tr>
               <tr>
+                <td>Show Name</td>
+                <td>
+                  <form onSubmit={handleShowNameSubmit}>
+                    <input type="text" value={newShowName} onChange={(e) => setNewShowName(e.target.value)} />
+                    <button type="submit">Update</button>
+                  </form>
+                </td>
+              </tr>
+              <tr>
                 <td>Path</td>
                 <td>{selectedFile.path}</td>
               </tr>
+              {/* Add episode details if not null */}
+              {selectedFile.episode_details && (
+                <>
+                  <tr>
+                    <td>Episode Number</td>
+                    <td>{selectedFile.episode_details.episode_number}</td>
+                  </tr>
+                  <tr>
+                    <td>Season Number</td>
+                    <td>{selectedFile.episode_details.season_number}</td>
+                  </tr>
+                  <tr>
+                    <td>Episode Name</td>
+                    <td>{selectedFile.episode_details.episode_name}</td>
+                  </tr>
+                  <tr>
+                    <td>Episode Poster</td>
+                    <td>
+                      <img src={`https://image.tmdb.org/t/p/w500${selectedFile.episode_details.poster_path}`} alt="Episode Poster" />
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>Episode Overview</td>
+                    <td>{selectedFile.episode_details.overview}</td>
+                  </tr>
+                  <tr>
+                    <td>Show Poster</td>
+                    <td>
+                      <img src={`https://image.tmdb.org/t/p/w500${selectedFile.episode_details.show_poster_path}`} alt="Show Poster" />
+                    </td>
+                  </tr>
+                </>
+              )}
+
             </tbody>
           </Table>
         ) : (

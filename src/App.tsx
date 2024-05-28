@@ -36,6 +36,7 @@ const App: React.FC = () => {
         <Tab label="Episode" icon={faFileAlt}>
           <Episode
             inputFiles={inputFiles}
+            setInputFiles={setInputFiles}
           />
         </Tab>
         <Tab label="Subtitle" icon={faClosedCaptioning}>

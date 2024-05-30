@@ -7,19 +7,20 @@ interface ExtractedDetails {
 }
 
 const extractDetails = (name: string): ExtractedDetails => {
-  const cleanedName = cleanFileName(name);
 
-  const seasonMatch = cleanedName.match(/(?:S|Season\s*)(\d{1,2})/i);
+  const seasonMatch = name.match(/(?:S|Season\s*)(\d{1,2})/i);
   const seasonNumber = seasonMatch ? seasonMatch[1].padStart(2, '0') : '01';
 
-  const episodeMatch = cleanedName.match(/(?:E|Episode\s*)(\d{1,2})/i) || cleanedName.match(/(\d{1,2})/);
+  const episodeMatch = name.match(/(?:E|Episode\s*)(\d{1,2})/i) || name.match(/(\d{1,2})/);
   const episodeNumber = episodeMatch ? episodeMatch[1].padStart(2, '0') : '00';
 
+  const cleanedName = cleanFileName(name);
+
   let showName = cleanedName.replace(/(?:S|Season\s*)\d{1,2}/i, '')
-                            .replace(/(?:E|Episode\s*)\d{1,2}/i, '')
-                            .replace(/\d{1,2}/, '')
-                            .replace(/\./g, ' ')
-                            .trim();
+    .replace(/(?:E|Episode\s*)\d{1,2}/i, '')
+    .replace(/\d{1,2}/, '')
+    .replace(/\./g, ' ')
+    .trim();
 
   showName = showName.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
 

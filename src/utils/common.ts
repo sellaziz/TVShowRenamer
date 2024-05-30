@@ -13,6 +13,8 @@ export type File = {
   extension: string;
   new_name: string;
   show_name: string;
-  path?: string;
+  path: string;
+  parent_path: string;
+  output_directory: string;
   episode_details?: EpisodeDetails | null;
 }

@@ -119,6 +119,10 @@ const Episode: React.FC<EpisodeProps> = ({ inputFiles, setInputFiles }) => {
                 <td>Path</td>
                 <td>{selectedFile.path}</td>
               </tr>
+              <tr>
+                <td>Output Directory</td>
+                <td>{selectedFile.output_directory}</td>
+              </tr>
               {/* Add episode details if not null */}
               {selectedFile.episode_details && (
                 <>

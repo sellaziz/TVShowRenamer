@@ -36,12 +36,26 @@ const InputFileList: React.FC<FileListProps> = ({ title, files }) => {
 };
 
 const OutputFileList: React.FC<FileListProps> = ({ title, files }) => {
+  const getRelativePath = (outputDir: string, filePath: string) => {
+    return outputDir.replace(filePath, '');
+  };
+
   return (
     <List>
       <h3>{title}</h3>
       {files.map((file, index) => (
         <ListItem key={index}>
-          {file.new_name !== file.original_name ? `${file.new_name}.${file.extension}` : 'Won\'t rename'}
+          {file.parent_path === file.output_directory ? (
+            file.new_name === file.original_name ? (
+              <span>Won't rename</span>
+            ) : (
+              <span>
+                {file.new_name}.{file.extension}
+              </span>
+            )
+          ) : (
+            <span>{getRelativePath(file.output_directory, file.parent_path)}{file.new_name}.{file.extension}</span>
+          )}
         </ListItem>
       ))}
     </List>

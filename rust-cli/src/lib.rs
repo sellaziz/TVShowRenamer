@@ -2,7 +2,6 @@
 //! or the file path and matches the names with a TV show using TheMovieDB
 //! and suggest a new standard name
 mod file_search;
-mod query;
 
 use regex::Regex;
 use std::env;

@@ -8,8 +8,8 @@ import OutputDirectorySelector from '../components/OutputDirectorySelector.tsx';
 import { faSyncAlt, faFileUpload, faCheck, faList, faTrash } from '@fortawesome/free-solid-svg-icons';
 import extractDetails from '../utils/extractDetails.ts';
 import fetchEpisodeDetails from '../utils/fetchEpisodeDetails.ts';
-import { invoke } from '@tauri-apps/api/tauri';
-import { open } from '@tauri-apps/api/dialog';
+import { invoke } from '@tauri-apps/api/core';
+import { open } from '@tauri-apps/plugin-dialog';
 import { File } from '../utils/common.ts';
 
 const Container = styled.div`

@@ -19,7 +19,7 @@
   "productName": "showrenamer",
   "mainBinaryName": "showrenamer",
   "version": "0.0.0",
-  "identifier": "com.tauri.dev",
+  "identifier": "com.tv-show-renamer.dev",
   "plugins": {},
   "app": {
     "security": {

@@ -1,4 +1,11 @@
-# TV Show Renamer
+# ShowRenamer
 
-An application to rename in bulk TV show files and uses the TMDB API to match to a TV Show to give a nice formatting as an output ('<Show-name> - S<season-number>E<episode-number> - <episode-name>.<extension>').
-This project was used as a way to discover new languages, so here you can find multiple implmentations under different directories.
+Application aimed at renaming filenames for TV Show to match a specific format.
+
+# Run
+
+```bash
+pnpm install
+export TMDB_API_KEY=...
+pnpm tauri dev
+```

@@ -56,7 +56,7 @@ const Episode: React.FC<EpisodeProps> = ({ inputFiles, setInputFiles }) => {
     }
   }, [inputFiles]);
 
-  const handleShowNameSubmit = (e) => {
+  const handleShowNameSubmit = (e: any) => {
     const updatedShowName = newShowName.trim();
     e.preventDefault();
     if (selectedFile && updatedShowName) {
@@ -143,10 +143,6 @@ const Episode: React.FC<EpisodeProps> = ({ inputFiles, setInputFiles }) => {
                     <td>
                       <img src={`https://image.tmdb.org/t/p/w500${selectedFile.episode_details.poster_path}`} alt="Episode Poster" />
                     </td>
-                  </tr>
-                  <tr>
-                    <td>Episode Overview</td>
-                    <td>{selectedFile.episode_details.overview}</td>
                   </tr>
                   <tr>
                     <td>Show Poster</td>

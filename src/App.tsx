@@ -39,13 +39,6 @@ const App: React.FC = () => {
             setInputFiles={setInputFiles}
           />
         </Tab>
-        <Tab label="Subtitle" icon={faClosedCaptioning}>
-          <Content>
-            <h2>Subtitle Tab</h2>
-            {/* Subtitle content goes here */}
-          </Content>
-        </Tab>
-        {/* Add more tabs as needed */}
       </Tabs>
     </Container>
   );

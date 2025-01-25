@@ -3,7 +3,7 @@ import styled from 'styled-components';
 import { Tabs, Tab } from './tabs/Tabs.tsx';
 import { Rename } from './tabs/Rename.tsx';
 import { Episode } from './tabs/Episode.tsx';
-import { faSyncAlt, faFileAlt, faClosedCaptioning } from '@fortawesome/free-solid-svg-icons';
+import { faSyncAlt, faFileAlt } from '@fortawesome/free-solid-svg-icons';
 import { File } from './utils/common.ts';
 
 const Container = styled.div`
@@ -11,11 +11,6 @@ const Container = styled.div`
   flex-direction: column;
   height: 100vh;
   padding: 20px;
-`;
-
-const Content = styled.div`
-  display: flex;
-  flex-grow: 1;
 `;
 
 const App: React.FC = () => {

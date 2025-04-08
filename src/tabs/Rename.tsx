@@ -46,7 +46,9 @@ const Rename: React.FC<RenameProps> = ({
             try {
                 const apiKey: string = await invoke('get_api_key');
                 episodeDetails = await fetchEpisodeDetails(file.show_name, parseInt(seasonNumber, 10), parseInt(episodeNumber, 10), apiKey);
-                newName = `${episodeDetails.show_name} - S${seasonNumber}E${episodeNumber} - ${episodeDetails.episode_name}`;
+                newName = episodeDetails.episode_name
+                    ? `${episodeDetails.show_name} - S${seasonNumber}E${episodeNumber} - ${episodeDetails.episode_name}`
+                    : `${episodeDetails.show_name} - S${seasonNumber}E${episodeNumber}`;
             } catch (error) {
                 newName = `${showName} - S${seasonNumber}E${episodeNumber}`;
                 console.error('Error fetching episode details:', error);
@@ -65,7 +67,9 @@ const Rename: React.FC<RenameProps> = ({
             try {
                 const apiKey: string = await invoke('get_api_key');
                 episodeDetails = await fetchEpisodeDetails(file.show_name, parseInt(seasonNumber, 10), parseInt(episodeNumber, 10), apiKey);
-                newName = `${episodeDetails.show_name} - S${seasonNumber}E${episodeNumber} - ${episodeDetails.episode_name}`;
+                newName = episodeDetails.episode_name
+                    ? `${episodeDetails.show_name} - S${seasonNumber}E${episodeNumber} - ${episodeDetails.episode_name}`
+                    : `${episodeDetails.show_name} - S${seasonNumber}E${episodeNumber}`;
                 if (!newName.match(/^[a-zA-Z0-9_.-]+$/)) {
                     newName = newName.replace(/[^a-zA-Z0-9_.-]+/g, ' ');
                 }

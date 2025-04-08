@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { v4 as uuidv4 } from 'uuid';
 import { InputFileList, OutputFileList } from '../components/FileList.tsx';
@@ -11,6 +11,7 @@ import fetchEpisodeDetails from '../utils/fetchEpisodeDetails.ts';
 import { invoke } from '@tauri-apps/api/core';
 import { open } from '@tauri-apps/plugin-dialog';
 import { File } from '../utils/common.ts';
+import { RenameFormat } from './Settings.tsx';
 
 const Container = styled.div`
   display: flex;
@@ -37,6 +38,32 @@ const Rename: React.FC<RenameProps> = ({
     outputDirectory,
     setOutputDirectory
 }) => {
+    const [renameFormat, setRenameFormat] = useState<RenameFormat>('default');
+
+    useEffect(() => {
+        invoke<RenameFormat>('get_rename_format').then((format) => {
+            setRenameFormat(format);
+        });
+    }, []);
+
+    const formatFileName = (showName: string, seasonNumber: string, episodeNumber: string, episodeName: string | null): string => {
+        const paddedSeason = seasonNumber.padStart(2, '0');
+        const paddedEpisode = episodeNumber.padStart(2, '0');
+
+        switch (renameFormat) {
+            case 'compact':
+                return `${showName} S${paddedSeason}E${paddedEpisode}`;
+            case 'simple':
+                return `${showName} ${parseInt(seasonNumber)}x${paddedEpisode}`;
+            case 'dot':
+                return `${showName} S${paddedSeason}.E${paddedEpisode}`;
+            case 'default':
+            default:
+                return episodeName
+                    ? `${showName} - S${paddedSeason}E${paddedEpisode} - ${episodeName}`
+                    : `${showName} - S${paddedSeason}E${paddedEpisode}`;
+        }
+    };
 
     const handleRename = async () => {
         const updatedFiles = await Promise.all(inputFiles.map(async (file) => {
@@ -46,11 +73,9 @@ const Rename: React.FC<RenameProps> = ({
             try {
                 const apiKey: string = await invoke('get_api_key');
                 episodeDetails = await fetchEpisodeDetails(file.show_name, parseInt(seasonNumber, 10), parseInt(episodeNumber, 10), apiKey);
-                newName = episodeDetails.episode_name
-                    ? `${episodeDetails.show_name} - S${seasonNumber}E${episodeNumber} - ${episodeDetails.episode_name}`
-                    : `${episodeDetails.show_name} - S${seasonNumber}E${episodeNumber}`;
+                newName = formatFileName(episodeDetails.show_name, seasonNumber, episodeNumber, episodeDetails.episode_name);
             } catch (error) {
-                newName = `${showName} - S${seasonNumber}E${episodeNumber}`;
+                newName = formatFileName(showName, seasonNumber, episodeNumber, null);
                 console.error('Error fetching episode details:', error);
             }
             return { ...file, new_name: newName, episode_details: episodeDetails };
@@ -67,20 +92,17 @@ const Rename: React.FC<RenameProps> = ({
             try {
                 const apiKey: string = await invoke('get_api_key');
                 episodeDetails = await fetchEpisodeDetails(file.show_name, parseInt(seasonNumber, 10), parseInt(episodeNumber, 10), apiKey);
-                newName = episodeDetails.episode_name
-                    ? `${episodeDetails.show_name} - S${seasonNumber}E${episodeNumber} - ${episodeDetails.episode_name}`
-                    : `${episodeDetails.show_name} - S${seasonNumber}E${episodeNumber}`;
+                newName = formatFileName(episodeDetails.show_name, seasonNumber, episodeNumber, episodeDetails.episode_name);
                 if (!newName.match(/^[a-zA-Z0-9_.-]+$/)) {
                     newName = newName.replace(/[^a-zA-Z0-9_.-]+/g, ' ');
                 }
-                var show=episodeDetails.show_name
+                var show = episodeDetails.show_name;
                 if (!show.match(/^[a-zA-Z0-9_.-]+$/)) {
                     show = show.replace(/[^a-zA-Z0-9_.-]+/g, ' ');
                 }
-                console.log(show);
-                orgOutputDirectory = file.path.split('/').slice(0, -1).join('/') + '/' + show + '/Season ' + seasonNumber+ '/';
+                orgOutputDirectory = file.path.split('/').slice(0, -1).join('/') + '/' + show + '/Season ' + seasonNumber + '/';
             } catch (error) {
-                newName = `${showName} - S${seasonNumber}E${episodeNumber}`;
+                newName = formatFileName(showName, seasonNumber, episodeNumber, null);
                 console.error('Error fetching episode details:', error);
             }
             return { ...file, new_name: newName, episode_details: episodeDetails, output_directory: orgOutputDirectory };

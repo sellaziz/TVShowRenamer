@@ -9,6 +9,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Serialize, Deserialize)]
 struct Config {
     api_key: String,
+    rename_format: String,
 }
 
 fn get_config_path() -> PathBuf {
@@ -25,6 +26,7 @@ fn load_config() -> Config {
         // If it doesn't exist, create a default config file
         let default_config = Config {
             api_key: "".to_string(),
+            rename_format: "default".to_string(),
         };
         let content = serde_json::to_string(&default_config).unwrap();
         fs::write(&config_path, content).unwrap();
@@ -35,6 +37,7 @@ fn load_config() -> Config {
     let content = fs::read_to_string(&config_path).unwrap_or_else(|_| "{}".to_string());
     serde_json::from_str(&content).unwrap_or_else(|_| Config {
         api_key: "".to_string(),
+        rename_format: "default".to_string(),
     })
 }
 
@@ -74,12 +77,31 @@ fn get_api_key() -> String {
     load_config().api_key
 }
 
+#[tauri::command]
+fn get_rename_format() -> String {
+    load_config().rename_format
+}
+
+#[tauri::command]
+fn set_rename_format(format: String) {
+    let mut config = load_config();
+    config.rename_format = format;
+    let content = serde_json::to_string(&config).unwrap();
+    fs::write(get_config_path(), content).unwrap();
+}
+
 fn main() {
     tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_shell::init())
-        .invoke_handler(tauri::generate_handler![rename_file, get_api_key, set_api_key])
+        .invoke_handler(tauri::generate_handler![
+            rename_file,
+            get_api_key,
+            set_api_key,
+            get_rename_format,
+            set_rename_format
+        ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

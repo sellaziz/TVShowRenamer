@@ -30,9 +30,15 @@ pnpm install
 ```
 
 3. Set up your TMDB API key:
-```bash
-export TMDB_API_KEY=your_api_key_here
-```
+
+   You can configure your API key in one of two ways:
+   - Through the application's Settings tab after installation
+   - By creating a `config.json` file in the application directory with the following structure:
+     ```json
+     {
+       "api_key": "your_tmdb_api_key_here"
+     }
+     ```
 
 ## Development
 

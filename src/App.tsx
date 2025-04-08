@@ -3,6 +3,7 @@ import styled from 'styled-components';
 import { Tabs, Tab } from './tabs/Tabs.tsx';
 import { Rename } from './tabs/Rename.tsx';
 import { Episode } from './tabs/Episode.tsx';
+import { Settings } from './tabs/Settings.tsx';
 import { faSyncAlt, faFileAlt } from '@fortawesome/free-solid-svg-icons';
 import { File } from './utils/common.ts';
 
@@ -33,6 +34,9 @@ const App: React.FC = () => {
             inputFiles={inputFiles}
             setInputFiles={setInputFiles}
           />
+        </Tab>
+        <Tab label="Settings" icon={faFileAlt}>
+          <Settings/>
         </Tab>
       </Tabs>
     </Container>

@@ -1,8 +1,50 @@
 // Prevents additional console window on Windows in release, DO NOT REMOVE!!
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
-use std::path::PathBuf;
-use std::{env, fs};
+use std::{fs, env};
+use std::path::{PathBuf};
+
+use serde::{Deserialize, Serialize};
+
+#[derive(Serialize, Deserialize)]
+struct Config {
+    api_key: String,
+}
+
+fn get_config_path() -> PathBuf {
+    // Get the current working directory and append "config.json"
+    let current_dir = env::current_dir().expect("Failed to get current directory");
+    current_dir.join("config.json")
+}
+
+fn load_config() -> Config {
+    let config_path = get_config_path();
+
+    // Check if the config file exists
+    if !config_path.exists() {
+        // If it doesn't exist, create a default config file
+        let default_config = Config {
+            api_key: "".to_string(),
+        };
+        let content = serde_json::to_string(&default_config).unwrap();
+        fs::write(&config_path, content).unwrap();
+        return default_config;
+    }
+
+    // Read and parse the config file
+    let content = fs::read_to_string(&config_path).unwrap_or_else(|_| "{}".to_string());
+    serde_json::from_str(&content).unwrap_or_else(|_| Config {
+        api_key: "".to_string(),
+    })
+}
+
+#[tauri::command]
+fn set_api_key(api_key: String) {
+    let mut config = load_config();
+    config.api_key = api_key;
+    let content = serde_json::to_string(&config).unwrap();
+    fs::write(get_config_path(), content).unwrap();
+}
 
 #[tauri::command]
 fn rename_file(
@@ -29,7 +71,7 @@ fn rename_file(
 
 #[tauri::command]
 fn get_api_key() -> String {
-    env::var("TMDB_API_KEY").expect("TMDBAPI_KEY must be set")
+    load_config().api_key
 }
 
 fn main() {
@@ -37,7 +79,7 @@ fn main() {
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_shell::init())
-        .invoke_handler(tauri::generate_handler![rename_file, get_api_key])
+        .invoke_handler(tauri::generate_handler![rename_file, get_api_key, set_api_key])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
